@@ -19,7 +19,7 @@
       background: black; /* Cor de fundo da página */
       position: relative; /* Para o botão de reinício e contadores */
     }
-    #restartButton {
+    #restartButton, #startButton {
       display: none;
       position: absolute;
       top: 50%;
@@ -33,7 +33,7 @@
       cursor: pointer;
       border-radius: 5px;
     }
-    #restartButton:hover {
+    #restartButton:hover, #startButton:hover {
       background-color: #45a049;
     }
     #score, #lives {
@@ -54,9 +54,10 @@
 <body>
 
   <canvas id="gameCanvas"></canvas>
+  <button id="startButton">Iniciar Jogo</button>
   <button id="restartButton">Reiniciar Jogo</button>
   <div id="score">Pontos: 0</div>
-  <div id="lives">Vidas: 3</div>
+  <div id="lives">Vidas: 15</div>
 
   <script src="script.js"></script>
 

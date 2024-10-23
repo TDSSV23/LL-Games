@@ -1,7 +1,8 @@
-// Seleciona o canvas, contexto e botão de reinício
+// Seleciona o canvas, contexto e botões
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const restartButton = document.getElementById('restartButton');
+const startButton = document.getElementById('startButton');
 const scoreDisplay = document.getElementById('score');
 const livesDisplay = document.getElementById('lives');
 
@@ -21,8 +22,8 @@ let player = {
   dx: 0,
   dy: 0,
   image: new Image(),
-  lives: 15, // Jogador começa com 15 vidas
-  lastHitTime: 0 // Marca o tempo da última colisão
+  lives: 15,
+  lastHitTime: 0
 };
 player.image.src = './img/jogador.png';
 
@@ -171,11 +172,12 @@ function checkCollisions() {
         proj.y < enemy.y + enemy.height &&
         proj.y + proj.height > enemy.y
       ) {
-        enemies.splice(eIndex, 1);
-        playerProjectiles.splice(pIndex, 1);
+        enemies.splice(eIndex, 1); // Remove o inimigo
+        playerProjectiles.splice(pIndex, 1); // Remove o projétil do jogador
         score++;
         scoreDisplay.textContent = `Pontos: ${score}`;
-        createEnemies();
+        createEnemies(); // Cria dois novos inimigos
+        createEnemies(); // Chamada adicional para criar mais dois
       }
     });
   });
@@ -205,9 +207,11 @@ function checkCollisions() {
         player.lives -= 2;
         if (player.lives < 0) player.lives = 0;
         livesDisplay.textContent = `Vidas: ${player.lives}`;
-        player.lastHitTime = currentTime; // Atualiza o tempo do último dano
+        player.lastHitTime = currentTime; // Atualiza o tempo da última colisão
+        enemies.splice(index, 1); // Remove o inimigo ao colidir
+        createEnemies(); // Cria dois novos inimigos
+        createEnemies(); // Chamada adicional para criar mais dois
       }
-      enemies.splice(index, 1); // Remove o inimigo após a colisão
     }
   });
 }
@@ -218,26 +222,28 @@ function updateGame() {
   updatePlayerProjectiles();
   updateEnemyProjectiles();
 
+  // Faz com que os inimigos atirem
   enemies.forEach(enemy => {
-    const now = Date.now();
-    if (now - enemy.lastShotTime > enemy.shootInterval) {
+    if (Date.now() - enemy.lastShotTime > enemy.shootInterval) {
       shootEnemyProjectile(enemy);
-      enemy.lastShotTime = now;
+      enemy.lastShotTime = Date.now(); // Atualiza o tempo do último tiro
     }
   });
 
   checkCollisions();
 
+  // Verifica se o jogador perdeu todas as vidas
   if (player.lives <= 0) {
     gameOver = true;
   }
 }
 
-// Funções para atualizar as posições
+// Funções para atualizar as posições dos elementos
 function updatePlayerPosition() {
   player.x += player.dx;
   player.y += player.dy;
 
+  // Limites da tela
   if (player.x < 0) player.x = 0;
   if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
   if (player.y < 0) player.y = 0;
@@ -246,18 +252,18 @@ function updatePlayerPosition() {
 
 function updatePlayerProjectiles() {
   playerProjectiles.forEach((proj, index) => {
-    proj.y -= proj.speed;
+    proj.y -= proj.speed; // Move o projétil do jogador
     if (proj.y < 0) {
-      playerProjectiles.splice(index, 1);
+      playerProjectiles.splice(index, 1); // Remove projéteis fora da tela
     }
   });
 }
 
 function updateEnemyProjectiles() {
   enemyProjectiles.forEach((proj, index) => {
-    proj.y += proj.speed;
+    proj.y += proj.speed; // Move o projétil do inimigo
     if (proj.y > canvas.height) {
-      enemyProjectiles.splice(index, 1);
+      enemyProjectiles.splice(index, 1); // Remove projéteis fora da tela
     }
   });
 }
@@ -265,31 +271,38 @@ function updateEnemyProjectiles() {
 // Função para desenhar a tela de Game Over
 function drawGameOver() {
   ctx.drawImage(gameOverImage, 0, 0, canvas.width, canvas.height);
-  restartButton.style.display = 'block';
+  restartButton.style.display = 'block'; // Mostra o botão de reinício
 }
 
 // Função para reiniciar o jogo
 function restartGame() {
   gameOver = false;
-  player.lives = 15; // Reinicia com 15 vidas
+  player.lives = 15; // Define as vidas para 15
   player.x = canvas.width / 2;
   player.y = canvas.height - 150;
-  player.lastHitTime = 0;
   enemies = [];
   playerProjectiles = [];
   enemyProjectiles = [];
   score = 0;
   scoreDisplay.textContent = `Pontos: ${score}`;
   livesDisplay.textContent = `Vidas: ${player.lives}`;
-  restartButton.style.display = 'none';
-  createEnemies();
-  gameLoop();
+  restartButton.style.display = 'none'; // Esconde o botão de reinício
+  createEnemies(); // Cria os inimigos iniciais
+  gameLoop(); // Reinicia o loop do jogo
+}
+
+// Função para iniciar o jogo
+function startGame() {
+  startButton.style.display = 'none'; // Esconde o botão de iniciar
+  restartButton.style.display = 'none'; // Esconde o botão de reiniciar se aparecer
+  restartGame(); // Inicia o jogo
 }
 
 // Event listeners
 document.addEventListener('keydown', handleKeyDown);
 document.addEventListener('keyup', handleKeyUp);
-restartButton.addEventListener('click', restartGame);
+restartButton.addEventListener('click', restartGame); // Reinicia o jogo quando o botão é clicado
+startButton.addEventListener('click', startGame); // Inicia o jogo quando o botão é clicado
 
 // Função principal do jogo
 function gameLoop() {
@@ -308,5 +321,5 @@ function gameLoop() {
 }
 
 // Inicializa o jogo
-createEnemies();
-gameLoop();
+createEnemies(); // Cria inimigos
+gameLoop(); // Inicia o loop do jogo
