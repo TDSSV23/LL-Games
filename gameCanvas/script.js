@@ -14,26 +14,27 @@ function resizeCanvas() {
 // Propriedades do jogador
 let player = {
   x: canvas.width / 2,
-  y: canvas.height - 150, // Aumentar a distância da borda inferior
-  width: 100, // Aumentado para 100 pixels
-  height: 100, // Aumentado para 100 pixels
+  y: canvas.height - 150,
+  width: 100,
+  height: 100,
   speed: 5,
   dx: 0,
   dy: 0,
   image: new Image(),
-  lives: 3
+  lives: 15, // Jogador começa com 15 vidas
+  lastHitTime: 0 // Marca o tempo da última colisão
 };
-player.image.src = './img/jogador.png'; // Substitua pelo caminho da imagem do jogador
+player.image.src = './img/jogador.png';
 
 // Configuração do cenário
 const background = new Image();
-background.src = './img/cenario.png'; // Substitua pelo caminho da imagem do cenário
+background.src = './img/cenario.png';
 
 // Propriedades dos inimigos e projéteis
 let enemies = [];
 let playerProjectiles = [];
 let enemyProjectiles = [];
-const maxEnemyProjectiles = 5; // Limite de projéteis inimigos
+const maxEnemyProjectiles = 5;
 const enemyImage = new Image();
 enemyImage.src = './img/inimigo.png';
 const playerProjectileImage = new Image();
@@ -118,11 +119,11 @@ function handleKeyUp(e) {
 // Função para atirar projéteis do jogador
 function shootPlayerProjectile() {
   const projectile = {
-    x: player.x + player.width / 2 - 10, // Ajustado para o centro do jogador
+    x: player.x + player.width / 2 - 10,
     y: player.y,
-    width: 20, // Aumentado para 20 pixels
-    height: 20, // Aumentado para 20 pixels
-    speed: 10 // Velocidade aumentada
+    width: 20,
+    height: 20,
+    speed: 10
   };
   playerProjectiles.push(projectile);
 }
@@ -131,12 +132,12 @@ function shootPlayerProjectile() {
 function createEnemies() {
   for (let i = 0; i < 2; i++) {
     const enemy = {
-      x: Math.random() * (canvas.width - 100), // Ajustado para largura aumentada
+      x: Math.random() * (canvas.width - 100),
       y: Math.random() * (canvas.height / 2),
-      width: 100, // Aumentado para 100 pixels
-      height: 100, // Aumentado para 100 pixels
+      width: 100,
+      height: 100,
       speed: 2,
-      shootInterval: Math.random() * 1000 + 1000, // Intervalo maior para atirar
+      shootInterval: Math.random() * 1000 + 1000,
       lastShotTime: Date.now()
     };
     enemies.push(enemy);
@@ -145,14 +146,14 @@ function createEnemies() {
 
 // Função para atirar projéteis dos inimigos
 function shootEnemyProjectile(enemy) {
-  if (enemyProjectiles.length >= maxEnemyProjectiles) return; // Limita projéteis
+  if (enemyProjectiles.length >= maxEnemyProjectiles) return;
 
   const projectile = {
-    x: enemy.x + enemy.width / 2 - 10, // Ajustado para o centro do inimigo
+    x: enemy.x + enemy.width / 2 - 10,
     y: enemy.y + enemy.height,
-    width: 20, // Aumentado para 20 pixels
-    height: 20, // Aumentado para 20 pixels
-    speed: 5, // Velocidade aumentada
+    width: 20,
+    height: 20,
+    speed: 5,
     image: enemyProjectileImage
   };
   enemyProjectiles.push(projectile);
@@ -160,6 +161,8 @@ function shootEnemyProjectile(enemy) {
 
 // Função para checar colisões
 function checkCollisions() {
+  const currentTime = Date.now();
+
   playerProjectiles.forEach((proj, pIndex) => {
     enemies.forEach((enemy, eIndex) => {
       if (
@@ -185,22 +188,26 @@ function checkCollisions() {
       proj.y < player.y + player.height
     ) {
       player.lives--;
-      if (player.lives < 0) player.lives = 0; // Não permite vidas negativas
+      if (player.lives < 0) player.lives = 0;
       livesDisplay.textContent = `Vidas: ${player.lives}`;
       enemyProjectiles.splice(index, 1);
     }
   });
 
-  enemies.forEach(enemy => {
+  enemies.forEach((enemy, index) => {
     if (
       player.x < enemy.x + enemy.width &&
       player.x + player.width > enemy.x &&
       player.y < enemy.y + enemy.height &&
       player.y + player.height > enemy.y
     ) {
-      player.lives -= 2;
-      if (player.lives < 0) player.lives = 0; // Não permite vidas negativas
-      livesDisplay.textContent = `Vidas: ${player.lives}`;
+      if (currentTime - player.lastHitTime > 1000) { // 1 segundo de intervalo
+        player.lives -= 2;
+        if (player.lives < 0) player.lives = 0;
+        livesDisplay.textContent = `Vidas: ${player.lives}`;
+        player.lastHitTime = currentTime; // Atualiza o tempo do último dano
+      }
+      enemies.splice(index, 1); // Remove o inimigo após a colisão
     }
   });
 }
@@ -264,9 +271,10 @@ function drawGameOver() {
 // Função para reiniciar o jogo
 function restartGame() {
   gameOver = false;
-  player.lives = 3;
+  player.lives = 15; // Reinicia com 15 vidas
   player.x = canvas.width / 2;
   player.y = canvas.height - 150;
+  player.lastHitTime = 0;
   enemies = [];
   playerProjectiles = [];
   enemyProjectiles = [];
