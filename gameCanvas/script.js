@@ -14,9 +14,9 @@ function resizeCanvas() {
 // Propriedades do jogador
 let player = {
   x: canvas.width / 2,
-  y: canvas.height - 100,
-  width: 50,
-  height: 50,
+  y: canvas.height - 150, // Aumentar a distância da borda inferior
+  width: 100, // Aumentado para 100 pixels
+  height: 100, // Aumentado para 100 pixels
   speed: 5,
   dx: 0,
   dy: 0,
@@ -33,6 +33,7 @@ background.src = './img/cenario.png'; // Substitua pelo caminho da imagem do cen
 let enemies = [];
 let playerProjectiles = [];
 let enemyProjectiles = [];
+const maxEnemyProjectiles = 5; // Limite de projéteis inimigos
 const enemyImage = new Image();
 enemyImage.src = './img/inimigo.png';
 const playerProjectileImage = new Image();
@@ -117,11 +118,11 @@ function handleKeyUp(e) {
 // Função para atirar projéteis do jogador
 function shootPlayerProjectile() {
   const projectile = {
-    x: player.x + player.width / 2 - 5,
+    x: player.x + player.width / 2 - 10, // Ajustado para o centro do jogador
     y: player.y,
-    width: 10,
-    height: 10,
-    speed: 7
+    width: 20, // Aumentado para 20 pixels
+    height: 20, // Aumentado para 20 pixels
+    speed: 10 // Velocidade aumentada
   };
   playerProjectiles.push(projectile);
 }
@@ -130,12 +131,13 @@ function shootPlayerProjectile() {
 function createEnemies() {
   for (let i = 0; i < 2; i++) {
     const enemy = {
-      x: Math.random() * (canvas.width - 50),
+      x: Math.random() * (canvas.width - 100), // Ajustado para largura aumentada
       y: Math.random() * (canvas.height / 2),
-      width: 50,
-      height: 50,
+      width: 100, // Aumentado para 100 pixels
+      height: 100, // Aumentado para 100 pixels
       speed: 2,
-      shootInterval: Math.random() * 1000 + 500
+      shootInterval: Math.random() * 1000 + 1000, // Intervalo maior para atirar
+      lastShotTime: Date.now()
     };
     enemies.push(enemy);
   }
@@ -143,12 +145,14 @@ function createEnemies() {
 
 // Função para atirar projéteis dos inimigos
 function shootEnemyProjectile(enemy) {
+  if (enemyProjectiles.length >= maxEnemyProjectiles) return; // Limita projéteis
+
   const projectile = {
-    x: enemy.x + enemy.width / 2 - 5,
+    x: enemy.x + enemy.width / 2 - 10, // Ajustado para o centro do inimigo
     y: enemy.y + enemy.height,
-    width: 10,
-    height: 10,
-    speed: 3,
+    width: 20, // Aumentado para 20 pixels
+    height: 20, // Aumentado para 20 pixels
+    speed: 5, // Velocidade aumentada
     image: enemyProjectileImage
   };
   enemyProjectiles.push(projectile);
@@ -181,6 +185,7 @@ function checkCollisions() {
       proj.y < player.y + player.height
     ) {
       player.lives--;
+      if (player.lives < 0) player.lives = 0; // Não permite vidas negativas
       livesDisplay.textContent = `Vidas: ${player.lives}`;
       enemyProjectiles.splice(index, 1);
     }
@@ -194,6 +199,7 @@ function checkCollisions() {
       player.y + player.height > enemy.y
     ) {
       player.lives -= 2;
+      if (player.lives < 0) player.lives = 0; // Não permite vidas negativas
       livesDisplay.textContent = `Vidas: ${player.lives}`;
     }
   });
@@ -206,8 +212,10 @@ function updateGame() {
   updateEnemyProjectiles();
 
   enemies.forEach(enemy => {
-    if (Math.random() < 0.05) {
+    const now = Date.now();
+    if (now - enemy.lastShotTime > enemy.shootInterval) {
       shootEnemyProjectile(enemy);
+      enemy.lastShotTime = now;
     }
   });
 
@@ -258,7 +266,7 @@ function restartGame() {
   gameOver = false;
   player.lives = 3;
   player.x = canvas.width / 2;
-  player.y = canvas.height - 100;
+  player.y = canvas.height - 150;
   enemies = [];
   playerProjectiles = [];
   enemyProjectiles = [];
@@ -270,7 +278,7 @@ function restartGame() {
   gameLoop();
 }
 
-// Event listeners para capturar as teclas pressionadas e soltas
+// Event listeners
 document.addEventListener('keydown', handleKeyDown);
 document.addEventListener('keyup', handleKeyUp);
 restartButton.addEventListener('click', restartGame);
