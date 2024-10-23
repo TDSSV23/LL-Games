@@ -36,9 +36,9 @@ let enemyProjectiles = [];
 const enemyImage = new Image();
 enemyImage.src = './img/inimigo.png';
 const playerProjectileImage = new Image();
-playerProjectileImage.src = './img/projetil.png';
+playerProjectileImage.src = './img/projetil_jogador.png';
 const enemyProjectileImage = new Image();
-enemyProjectileImage.src = './img/projetil.png';
+enemyProjectileImage.src = './img/projetil_inimigo.png';
 
 // Estado do jogo
 let gameOver = false;
@@ -73,7 +73,7 @@ function drawProjectiles() {
     ctx.drawImage(playerProjectileImage, proj.x, proj.y, proj.width, proj.height);
   });
   enemyProjectiles.forEach(proj => {
-    ctx.drawImage(enemyProjectileImage, proj.x, proj.y, proj.width, proj.height);
+    ctx.drawImage(proj.image, proj.x, proj.y, proj.width, proj.height);
   });
 }
 
@@ -128,13 +128,15 @@ function shootPlayerProjectile() {
 
 // Função para criar inimigos
 function createEnemies() {
-  for (let i = 0; i < 2; i++) { // Adiciona dois inimigos de cada vez
+  for (let i = 0; i < 2; i++) {
+    // Adiciona dois inimigos de cada vez
     const enemy = {
       x: Math.random() * (canvas.width - 50),
       y: Math.random() * (canvas.height / 2),
       width: 50,
       height: 50,
-      speed: 2
+      speed: 2,
+      shootInterval: Math.random() * 1000 + 500 // Intervalo aleatório para atirar
     };
     enemies.push(enemy);
   }
@@ -143,132 +145,138 @@ function createEnemies() {
 // Função para atirar projéteis dos inimigos
 function shootEnemyProjectile(enemy) {
   const projectile = {
-    x: enemy.x + enemy.width / 2 - 5,
-    y: enemy.y + enemy.height,
-    width: 10,
-    height: 10,
-    speed: 3
+  x: enemy.x + enemy.width / 2 - 5,
+  y: enemy.y + enemy.height,
+  width: 10,
+  height: 10,
+  speed: 3,
+  image: enemyProjectileImage
   };
   enemyProjectiles.push(projectile);
-}
-
-// Função para checar colisões entre projéteis e inimigos, e inimigos e o jogador
-function checkCollisions() {
+  }
+  
+  // Função para checar colisões entre projéteis e inimigos, e inimigos e o jogador
+  function checkCollisions() {
   // Checar colisões de projéteis do jogador com inimigos
   playerProjectiles.forEach((proj, pIndex) => {
-    enemies.forEach((enemy, eIndex) => {
-      if (
-        proj.x < enemy.x + enemy.width &&
-        proj.x + proj.width > enemy.x &&
-        proj.y < enemy.y + enemy.height &&
-        proj.y + proj.height > enemy.y
-      ) {
-        enemies.splice(eIndex, 1); // Remove o inimigo
-        playerProjectiles.splice(pIndex, 1); // Remove o projétil do jogador
-        score++; // Aumenta a pontuação
-        scoreDisplay.textContent = `Pontos: ${score}`;
-        
-        // Adiciona dois novos inimigos
-        createEnemies();
-      }
-    });
+  enemies.forEach((enemy, eIndex) => {
+  if (
+  proj.x < enemy.x + enemy.width &&
+  proj.x + proj.width > enemy.x &&
+  proj.y < enemy.y + enemy.height &&
+  proj.y + proj.height > enemy.y
+  ) {
+  enemies.splice(eIndex, 1); // Remove o inimigo
+  playerProjectiles.splice(pIndex, 1); // Remove o projétil do jogador
+  score++; // Aumenta a pontuação
+  scoreDisplay.textContent = Pontos: ${score};
+  // Adiciona dois novos inimigos
+  createEnemies();
+  }
   });
-
+  });
+  
   // Checar colisões de projéteis dos inimigos com o jogador
   enemyProjectiles.forEach((proj, index) => {
-    if (
-      proj.x < player.x + player.width &&
-      proj.x + proj.width > player.x &&
-      proj.y + proj.height > player.y &&
-      proj.y < player.y + player.height // Adicionando a verificação para a parte de cima do jogador
-    ) {
-      player.lives--; // Perde 1 vida
-      livesDisplay.textContent = `Vidas: ${player.lives}`;
-      enemyProjectiles.splice(index, 1); // Remove o projétil do inimigo
-    }
+  if (
+  proj.x < player.x + player.width &&
+  proj.x + proj.width > player.x &&
+  proj.y + proj.height > player.y &&
+  proj.y < player.y + player.height
+  ) {
+  player.lives--; // Perde 1 vida
+  livesDisplay.textContent = Vidas: ${player.lives};
+  enemyProjectiles.splice(index, 1); // Remove o projétil do inimigo
+  }
   });
-
+  
   // Checar colisões entre o jogador e inimigos
   enemies.forEach(enemy => {
-    if (
-      player.x < enemy.x + enemy.width &&
-      player.x + player.width > enemy.x &&
-      player.y < enemy.y + enemy.height &&
-      player.y + player.height > enemy.y
-    ) {
-      player.lives -= 2; // Perde 2 vidas ao colidir com um inimigo
-      livesDisplay.textContent = `Vidas: ${player.lives}`;
-    }
+  if (
+  player.x < enemy.x + enemy.width &&
+  player.x + player.width > enemy.x &&
+  player.y < enemy.y + enemy.height &&
+  player.y + player.height > enemy.y
+  ) {
+  player.lives -= 2; // Perde 2 vidas ao colidir com um inimigo
+  livesDisplay.textContent = Vidas: ${player.lives};
+  }
   });
-}
-
-// Função para atualizar a lógica do jogo
-function updateGame() {
+  }
+  
+  // Função para atualizar a lógica do jogo
+  function updateGame() {
   // Atualização do jogador
   updatePlayerPosition();
   updatePlayerProjectiles();
   updateEnemyProjectiles();
-
+  
+  // Faz com que os inimigos atirem
+  enemies.forEach(enemy => {
+  if (Math.random() < 0.05) { // 5% de chance de atirar
+  shootEnemyProjectile(enemy);
+  }
+  });
+  
   // Checa colisões
   checkCollisions();
-
+  
   // Verifica se o jogador perdeu todas as vidas
   if (player.lives <= 0) {
-    gameOver = true;
+  gameOver = true;
   }
-}
-
-// Funções para atualizar as posições dos elementos
-function updatePlayerPosition() {
+  }
+  
+  // Funções para atualizar as posições dos elementos
+  function updatePlayerPosition() {
   player.x += player.dx;
   player.y += player.dy;
-
+  
   // Limites da tela
   if (player.x < 0) player.x = 0;
   if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
   if (player.y < 0) player.y = 0;
   if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
-}
-
-function updatePlayerProjectiles() {
+  }
+  
+  function updatePlayerProjectiles() {
   playerProjectiles.forEach((proj, index) => {
-    proj.y -= proj.speed; // Move o projétil do jogador
-    if (proj.y < 0) {
-      playerProjectiles.splice(index, 1); // Remove projéteis fora da tela
-    }
+  proj.y -= proj.speed; // Move o projétil do jogador
+  if (proj.y < 0) {
+  playerProjectiles.splice(index, 1); // Remove projéteis fora da tela
+  }
   });
-}
-
-function updateEnemyProjectiles() {
+  }
+  
+  function updateEnemyProjectiles() {
   enemyProjectiles.forEach((proj, index) => {
-    proj.y += proj.speed; // Move o projétil do inimigo
-    if (proj.y > canvas.height) {
-      enemyProjectiles.splice(index, 1); // Remove projéteis fora da tela
-    }
+  proj.y += proj.speed; // Move o projétil do inimigo
+  if (proj.y > canvas.height) {
+  enemyProjectiles.splice(index, 1); // Remove projéteis fora da tela
+  }
   });
-}
-
-// Função para desenhar a tela de Game Over
-function drawGameOver() {
+  }
+  
+  // Função para desenhar a tela de Game Over
+  function drawGameOver() {
   ctx.drawImage(gameOverImage, 0, 0, canvas.width, canvas.height);
   restartButton.style.display = 'block'; // Mostra o botão de reinício
-}
-
-// Função para reiniciar o jogo
+  }
+  // Função para reiniciar o jogo
 function restartGame() {
-  gameOver = false;
-  player.lives = 3;
-  player.x = canvas.width / 2;
-  player.y = canvas.height - 100;
-  enemies = [];
-  playerProjectiles = [];
-  enemyProjectiles = [];
-  score = 0;
-  scoreDisplay.textContent = `Pontos: ${score}`;
-  livesDisplay.textContent = `Vidas: ${player.lives}`;
-  restartButton.style.display = 'none'; // Esconde o botão de reinício
-  createEnemies(); // Cria os inimigos iniciais
-  gameLoop(); // Reinicia o loop do jogo
+gameOver = false;
+player.lives = 3;
+player.x = canvas.width / 2;
+player.y = canvas.height - 100;
+enemies = [];
+playerProjectiles = [];
+enemyProjectiles = [];
+score = 0;
+scoreDisplay.textContent = Pontos: ${score};
+livesDisplay.textContent = Vidas: ${player.lives};
+restartButton.style.display = 'none'; // Esconde o botão de reinício
+createEnemies(); // Cria os inimigos iniciais
+gameLoop(); // Reinicia o loop do jogo
 }
 
 // Event listeners para capturar as teclas pressionadas e soltas
@@ -278,21 +286,19 @@ restartButton.addEventListener('click', restartGame); // Reinicia o jogo quando 
 
 // Função principal do jogo
 function gameLoop() {
-  if (gameOver) {
-    drawGameOver();
-    return;
-  }
+if (gameOver) {
+drawGameOver();
+return;
+}
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+drawBackground();
+drawPlayer();
+drawEnemies();
+drawProjectiles();
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBackground();
-  drawPlayer();
-  drawEnemies();
-  drawProjectiles();
-
-  // Atualizar posições e lógica do jogo
-  updateGame();
-
-  requestAnimationFrame(gameLoop);
+// Atualizar posições e lógica do jogo
+updateGame();
+requestAnimationFrame(gameLoop);
 }
 
 // Inicializa o jogo
