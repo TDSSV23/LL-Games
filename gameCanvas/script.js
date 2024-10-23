@@ -2,7 +2,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const restartButton = document.getElementById('restartButton');
-const startButton = document.getElementById('startButton');
+const startButton = document.getElementById('startButton'); // Botão de iniciar
 const scoreDisplay = document.getElementById('score');
 const livesDisplay = document.getElementById('lives');
 
@@ -16,26 +16,24 @@ function resizeCanvas() {
 let player = {
   x: canvas.width / 2,
   y: canvas.height - 150,
-  width: 100,
-  height: 100,
+  width: 50,
+  height: 50,
   speed: 5,
   dx: 0,
   dy: 0,
   image: new Image(),
-  lives: 15,
-  lastHitTime: 0
+  lives: 15 // Inicia com 15 vidas
 };
-player.image.src = './img/jogador.png';
+player.image.src = './img/jogador.png'; // Substitua pelo caminho da imagem do jogador
 
 // Configuração do cenário
 const background = new Image();
-background.src = './img/cenario.png';
+background.src = './img/cenario.png'; // Substitua pelo caminho da imagem do cenário
 
 // Propriedades dos inimigos e projéteis
 let enemies = [];
 let playerProjectiles = [];
 let enemyProjectiles = [];
-const maxEnemyProjectiles = 5;
 const enemyImage = new Image();
 enemyImage.src = './img/inimigo.png';
 const playerProjectileImage = new Image();
@@ -120,11 +118,11 @@ function handleKeyUp(e) {
 // Função para atirar projéteis do jogador
 function shootPlayerProjectile() {
   const projectile = {
-    x: player.x + player.width / 2 - 10,
+    x: player.x + player.width / 2 - 5,
     y: player.y,
-    width: 20,
-    height: 20,
-    speed: 10
+    width: 10,
+    height: 10,
+    speed: 7
   };
   playerProjectiles.push(projectile);
 }
@@ -132,14 +130,15 @@ function shootPlayerProjectile() {
 // Função para criar inimigos
 function createEnemies() {
   for (let i = 0; i < 2; i++) {
+    // Adiciona dois inimigos de cada vez
     const enemy = {
-      x: Math.random() * (canvas.width - 100),
+      x: Math.random() * (canvas.width - 50),
       y: Math.random() * (canvas.height / 2),
-      width: 100,
-      height: 100,
+      width: 50,
+      height: 50,
       speed: 2,
-      shootInterval: Math.random() * 1000 + 1000,
-      lastShotTime: Date.now()
+      shootInterval: Math.random() * 1000 + 500, // Intervalo aleatório para atirar
+      lastShotTime: Date.now() // Adiciona a última vez que o inimigo atirou
     };
     enemies.push(enemy);
   }
@@ -147,14 +146,12 @@ function createEnemies() {
 
 // Função para atirar projéteis dos inimigos
 function shootEnemyProjectile(enemy) {
-  if (enemyProjectiles.length >= maxEnemyProjectiles) return;
-
   const projectile = {
-    x: enemy.x + enemy.width / 2 - 10,
+    x: enemy.x + enemy.width / 2 - 5,
     y: enemy.y + enemy.height,
-    width: 20,
-    height: 20,
-    speed: 5,
+    width: 10,
+    height: 10,
+    speed: 3,
     image: enemyProjectileImage
   };
   enemyProjectiles.push(projectile);
@@ -162,8 +159,7 @@ function shootEnemyProjectile(enemy) {
 
 // Função para checar colisões
 function checkCollisions() {
-  const currentTime = Date.now();
-
+  // Checar colisões de projéteis do jogador com inimigos
   playerProjectiles.forEach((proj, pIndex) => {
     enemies.forEach((enemy, eIndex) => {
       if (
@@ -174,14 +170,15 @@ function checkCollisions() {
       ) {
         enemies.splice(eIndex, 1); // Remove o inimigo
         playerProjectiles.splice(pIndex, 1); // Remove o projétil do jogador
-        score++;
+        score++; // Aumenta a pontuação
         scoreDisplay.textContent = `Pontos: ${score}`;
-        createEnemies(); // Cria dois novos inimigos
+        createEnemies(); // Adiciona dois novos inimigos
         createEnemies(); // Chamada adicional para criar mais dois
       }
     });
   });
 
+  // Checar colisões de projéteis dos inimigos com o jogador
   enemyProjectiles.forEach((proj, index) => {
     if (
       proj.x < player.x + player.width &&
@@ -189,13 +186,13 @@ function checkCollisions() {
       proj.y + proj.height > player.y &&
       proj.y < player.y + player.height
     ) {
-      player.lives--;
-      if (player.lives < 0) player.lives = 0;
+      player.lives--; // Perde 1 vida
       livesDisplay.textContent = `Vidas: ${player.lives}`;
-      enemyProjectiles.splice(index, 1);
+      enemyProjectiles.splice(index, 1); // Remove o projétil do inimigo
     }
   });
 
+  // Checar colisões entre o jogador e inimigos
   enemies.forEach((enemy, index) => {
     if (
       player.x < enemy.x + enemy.width &&
@@ -203,15 +200,11 @@ function checkCollisions() {
       player.y < enemy.y + enemy.height &&
       player.y + player.height > enemy.y
     ) {
-      if (currentTime - player.lastHitTime > 1000) { // 1 segundo de intervalo
-        player.lives -= 2;
-        if (player.lives < 0) player.lives = 0;
-        livesDisplay.textContent = `Vidas: ${player.lives}`;
-        player.lastHitTime = currentTime; // Atualiza o tempo da última colisão
-        enemies.splice(index, 1); // Remove o inimigo ao colidir
-        createEnemies(); // Cria dois novos inimigos
-        createEnemies(); // Chamada adicional para criar mais dois
-      }
+      player.lives -= 2; // Perde 2 vidas ao colidir com um inimigo
+      livesDisplay.textContent = `Vidas: ${player.lives}`;
+      enemies.splice(index, 1); // Remove o inimigo
+      createEnemies(); // Adiciona dois novos inimigos
+      createEnemies(); // Chamada adicional para criar mais dois
     }
   });
 }
@@ -272,6 +265,8 @@ function updateEnemyProjectiles() {
 function drawGameOver() {
   ctx.drawImage(gameOverImage, 0, 0, canvas.width, canvas.height);
   restartButton.style.display = 'block'; // Mostra o botão de reinício
+  restartButton.style.top = '50%'; // Centraliza o botão de reinício
+  restartButton.style.left = '50%'; // Centraliza o botão de reinício
 }
 
 // Função para reiniciar o jogo
@@ -294,7 +289,7 @@ function restartGame() {
 // Função para iniciar o jogo
 function startGame() {
   startButton.style.display = 'none'; // Esconde o botão de iniciar
-  restartButton.style.display = 'none'; // Esconde o botão de reiniciar se aparecer
+  restartButton.style.display = 'none'; // Esconde o botão de reinício se aparecer
   restartGame(); // Inicia o jogo
 }
 
