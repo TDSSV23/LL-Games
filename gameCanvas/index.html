@@ -1,64 +1,108 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogo de Selva</title>
-  <style>
-    canvas {
-      display: block;
-      margin: 0;
-      padding: 0;
-      position: absolute; /* Ocupa toda a tela */
-      top: 0;
-      left: 0;
-    }
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black; /* Cor de fundo da página */
-      position: relative; /* Para o botão de reinício e contadores */
-    }
-    #restartButton {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 10px 20px;
-      font-size: 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    #restartButton:hover {
-      background-color: #45a049;
-    }
-    #score, #lives {
-      position: absolute;
-      color: white;
-      font-size: 20px;
-    }
-    #score {
-      top: 10px;
-      left: 10px;
-    }
-    #lives {
-      top: 10px;
-      right: 10px;
-    }
-  </style>
-</head>
-<body>
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
 
-  <canvas id="gameCanvas"></canvas>
-  <button id="restartButton">Reiniciar Jogo</button>
-  <div id="score">Pontos: 0</div>
-  <div id="lives">Vidas: 3</div>
+public class JogoDeTiro extends JPanel implements KeyListener {
 
-  <script src="script.js"></script>
+    private int jogadorX = 250;
+    private int jogadorY = 400;
+    private int tiroX = 0;
+    private int tiroY = 0;
+    private boolean tiroAtirado = false;
+    private int pontos = 0;
+    private int vidas = 3;
+    private ArrayList<Inimigo> inimigos;
 
-</body>
-</html>
+    public JogoDeTiro() {
+        setBackground(Color.BLACK);
+        setFocusable(true);
+        addKeyListener(this);
+        inimigos = new ArrayList<>();
+        Timer timer = new Timer(10, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                atualizarJogo();
+                repaint();
+            }
+        });
+        timer.start();
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.setColor(Color.WHITE);
+        g.fillRect(jogadorX, jogadorY, 50, 50);
+        if (tiroAtirado) {
+            g.setColor(Color.YELLOW);
+            g.fillRect(tiroX, tiroY, 10, 20);
+        }
+        g.setColor(Color.WHITE);
+        g.drawString("Pontos: " + pontos, 10, 20);
+        g.drawString("Vidas: " + vidas, 10, 40);
+        for (Inimigo inimigo : inimigos) {
+            g.setColor(Color.RED);
+            g.fillRect(inimigo.x, inimigo.y, 50, 50);
+        }
+    }
+
+    public void atualizarJogo() {
+        if (tiroAtirado) {
+            tiroY -= 5;
+            if (tiroY < 0) {
+                tiroAtirado = false;
+            }
+        }
+        for (Inimigo inimigo : inimigos) {
+            inimigo.y += 2;
+            if (inimigo.y > getHeight()) {
+                inimigos.remove(inimigo);
+                vidas--;
+            }
+            if (tiroAtirado && inimigo.x < tiroX + 10 && inimigo.x + 50 > tiroX && inimigo.y < tiroY + 20 && inimigo.y + 50 > tiroY) {
+                pontos++;
+                inimigos.remove(inimigo);
+                tiroAtirado = false;
+            }
+        }
+        if (vidas <= 0) {
+            JOptionPane.showMessageDialog(null, "Game Over!");
+            System.exit(0);
+        }
+        if (Math.random() < 0.1) {
+            inimigos.add(new Inimigo((int) (Math.random() * (getWidth() - 50))));
+        }
+    }
+
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            jogadorX -= 10;
+        } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            jogadorX += 10;
+        } else if (e.getKeyCode() == KeyEvent.VK_SPACE && !tiroAtirado) {
+            tiroX = jogadorX + 25;
+            tiroY = jogadorY;
+            tiroAtirado = true;
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {}
+
+    public void keyTyped(KeyEvent e) {}
+
+    private class Inimigo {
+        int x, y;
+
+        public Inimigo(int x) {
+            this.x = x;
+            this.y = 0;
+        }
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Jogo de Tiro");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.add(new JogoDeTiro());
+        frame.setSize(500, 500);
+        frame.setVisible(true);
+    }
+}
