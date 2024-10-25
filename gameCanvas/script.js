@@ -1,3 +1,10 @@
+document.addEventListener('DOMContentLoaded', () => {
+  resizeCanvas();
+  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keyup', handleKeyUp);
+  restartButton.addEventListener('click', restartGame);
+  startButton.addEventListener('click', startGame);
+});
 // Seleciona o canvas, contexto e botões
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -12,7 +19,6 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
 // Propriedades do jogador
 let player = {
@@ -77,8 +83,10 @@ function drawProjectiles() {
 }
 
 // Função para capturar as teclas de movimento
+background.src = './img/cenario1.png';
+
+// Funções para controle de entrada do jogador
 function handleKeyDown(e) {
-  if (gameOver) return;
   switch (e.key) {
     case 'ArrowUp':
       player.dy = -player.speed;
@@ -92,14 +100,10 @@ function handleKeyDown(e) {
     case 'ArrowRight':
       player.dx = player.speed;
       break;
-    case ' ':
-      shootPlayerProjectile();
-      break;
   }
 }
 
 function handleKeyUp(e) {
-  if (gameOver) return;
   switch (e.key) {
     case 'ArrowUp':
     case 'ArrowDown':
@@ -111,7 +115,6 @@ function handleKeyUp(e) {
       break;
   }
 }
-
 // Função para atirar projéteis do jogador
 function shootPlayerProjectile() {
   const projectile = {
@@ -232,7 +235,30 @@ function updateEnemyProjectiles() {
   enemyProjectiles.forEach((proj, index) => {
     proj.y += proj.speed;
     if (proj.y > canvas.height) enemyProjectiles.splice(index, 1);
-  });
+  })};
+
+// Funções de desenho
+function drawBackground() {
+  if (background.complete) {
+    ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+  } else {
+    console.log('Background not loaded');
+  }
+}
+
+function drawPlayer() {
+  if (player.image.complete) {
+    ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
+  } else {
+    console.log('Player image not loaded');
+  }
+}
+
+// Função para iniciar o jogo
+function startGame() {
+  startButton.style.display = 'none';
+  gameOver = false;
+  gameLoop();
 }
 
 // Função para desenhar tela de Game Over
@@ -247,17 +273,11 @@ function restartGame() {
   player.lives = 15;
   player.x = canvas.width / 2;
   player.y = canvas.height - 150;
-  enemies = [];
-  playerProjectiles = [];
-  enemyProjectiles = [];
-  score = 0;
-  scoreDisplay.textContent = `Pontos: ${score}`;
+  scoreDisplay.textContent = `Pontos: 0`;
   livesDisplay.textContent = `Vidas: ${player.lives}`;
   restartButton.style.display = 'none';
-  createEnemies();
   gameLoop();
 }
-
 function startGame() {
   startButton.style.display = 'none';
   restartButton.style.display = 'none';
@@ -273,17 +293,13 @@ startButton.addEventListener('click', startGame);
 // Função principal do jogo
 function gameLoop() {
   if (gameOver) {
-    drawGameOver();
+    console.log('Game Over');
     return;
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
   drawPlayer();
-  drawEnemies();
-  drawProjectiles();
-  updateGame();
   requestAnimationFrame(gameLoop);
 }
-
 createEnemies();
 gameLoop();
