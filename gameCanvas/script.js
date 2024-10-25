@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', handleKeyDown);  
   document.addEventListener('keyup', handleKeyUp);  
   restartButton.addEventListener('click', restartGame);  
-  startButton.addEventListener('click', startGame);
 });
 
 // Seleciona o canvas, contexto e botões
@@ -37,7 +36,7 @@ player.image.src = './img/jogador.png';
 
 // Configuração do cenário
 const background = new Image();
-background.src = './img/cenario.png';
+background.src = './img/cenario1.png';
 
 // Propriedades dos inimigos e projéteis
 let enemies = [];
