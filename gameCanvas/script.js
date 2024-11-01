@@ -1,11 +1,11 @@
 // Seleciona o canvas, contexto e botões
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const restartButton = document.getElementById('restartButton');
-const startButton = document.getElementById('startButton'); // Botão de iniciar
-const scoreDisplay = document.getElementById('score');
-const livesDisplay = document.getElementById('lives');
-const levelDisplay = document.getElementById('level');
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const restartButton = document.getElementById("restartButton");
+const startButton = document.getElementById("startButton"); // Botão de iniciar
+const scoreDisplay = document.getElementById("score");
+const livesDisplay = document.getElementById("lives");
+const levelDisplay = document.getElementById("level");
 
 // Ajusta o canvas para ocupar a tela inteira
 function resizeCanvas() {
@@ -23,34 +23,38 @@ let player = {
   dx: 0,
   dy: 0,
   image: new Image(),
-  lives: 15 // Inicia com 15 vidas
+  lives: 15, // Inicia com 15 vidas
 };
-player.image.src = './img/jogador.png'; // Substitua pelo caminho da imagem do jogador
+player.image.src = "./img/jogador.png"; // Substitua pelo caminho da imagem do jogador
 
 // Configuração do cenário
 const background = new Image();
-background.src = './img/cenario1.png'; // Substitua pelo caminho da imagem do cenário
+background.src = "./img/cenario1.png"; // Substitua pelo caminho da imagem do cenário
 
 // Propriedades dos inimigos e projéteis
 let enemies = [];
+let bosses = [];
 let playerProjectiles = [];
 let enemyProjectiles = [];
 const enemyImage = new Image();
-enemyImage.src = './img/inimigo.png';
+enemyImage.src = "./img/inimigo.png";
 const playerProjectileImage = new Image();
-playerProjectileImage.src = './img/projetil_jogador.png';
+playerProjectileImage.src = "./img/projetil_jogador.png";
 const enemyProjectileImage = new Image();
-enemyProjectileImage.src = './img/projetil_inimigo.png';
+enemyProjectileImage.src = "./img/projetil_inimigo.png";
 
 // Estado do jogo
 let gameOver = false;
 let score = 0;
 let level = 1;
+let boss2 = false;
+let boss3 = false;
+let boss4 = false;
 const gameOverImage = new Image();
-gameOverImage.src = './img/game_over.png';
+gameOverImage.src = "./img/game_over.png";
 
 // Ajusta o canvas quando a janela for redimensionada
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
 // Função para desenhar o cenário
@@ -65,17 +69,30 @@ function drawPlayer() {
 
 // Função para desenhar os inimigos
 function drawEnemies() {
-  enemies.forEach(enemy => {
+  enemies.forEach((enemy) => {
     ctx.drawImage(enemyImage, enemy.x, enemy.y, enemy.width, enemy.height);
+  });
+}
+
+// Função para desenhar os chefões
+function drawBoss() {
+  bosses.forEach((boss) => {
+    ctx.drawImage(boss.image, boss.x, boss.y, boss.width, boss.height);
   });
 }
 
 // Função para desenhar os projéteis
 function drawProjectiles() {
-  playerProjectiles.forEach(proj => {
-    ctx.drawImage(playerProjectileImage, proj.x, proj.y, proj.width, proj.height);
+  playerProjectiles.forEach((proj) => {
+    ctx.drawImage(
+      playerProjectileImage,
+      proj.x,
+      proj.y,
+      proj.width,
+      proj.height
+    );
   });
-  enemyProjectiles.forEach(proj => {
+  enemyProjectiles.forEach((proj) => {
     ctx.drawImage(proj.image, proj.x, proj.y, proj.width, proj.height);
   });
 }
@@ -85,22 +102,22 @@ function handleKeyDown(e) {
   if (gameOver) {
     player.dy = 0;
     player.dx = 0;
-    return
-  };
+    return;
+  }
   switch (e.key) {
-    case 'ArrowUp':
+    case "ArrowUp":
       player.dy = -player.speed;
       break;
-    case 'ArrowDown':
+    case "ArrowDown":
       player.dy = player.speed;
       break;
-    case 'ArrowLeft':
+    case "ArrowLeft":
       player.dx = -player.speed;
       break;
-    case 'ArrowRight':
+    case "ArrowRight":
       player.dx = player.speed;
       break;
-    case ' ':
+    case " ":
       shootPlayerProjectile();
       break;
   }
@@ -110,12 +127,12 @@ function handleKeyDown(e) {
 function handleKeyUp(e) {
   if (gameOver) return;
   switch (e.key) {
-    case 'ArrowUp':
-    case 'ArrowDown':
+    case "ArrowUp":
+    case "ArrowDown":
       player.dy = 0;
       break;
-    case 'ArrowLeft':
-    case 'ArrowRight':
+    case "ArrowLeft":
+    case "ArrowRight":
       player.dx = 0;
       break;
   }
@@ -128,7 +145,7 @@ function shootPlayerProjectile() {
     y: player.y,
     width: 10,
     height: 10,
-    speed: 7
+    speed: 7,
   };
   playerProjectiles.push(projectile);
 }
@@ -144,10 +161,32 @@ function createEnemies() {
       height: 50,
       speed: 2,
       shootInterval: Math.random() * 1000 + 500, // Intervalo aleatório para atirar
-      lastShotTime: Date.now() // Adiciona a última vez que o inimigo atirou
+      lastShotTime: Date.now(), // Adiciona a última vez que o inimigo atirou
     };
     enemies.push(enemy);
   }
+}
+
+function createBoss() {
+  // Propriedades do chefão
+  const boss = {
+    x: canvas.width / 1.7,
+    y: canvas.height / 9,
+    width: 200,
+    height: 200,
+    speed: 5,
+    dx: 0,
+    dy: 0,
+    image: new Image(),
+    lives: 2, // Inicia com 2 vidas
+  };
+  switch (level) {
+    case 2:
+      boss.image.src = "./img/boss1.png";
+      break;
+  }
+
+  bosses.push(boss);
 }
 
 // Função para atirar projéteis dos inimigos
@@ -158,7 +197,7 @@ function shootEnemyProjectile(enemy) {
     width: 10,
     height: 10,
     speed: 3,
-    image: enemyProjectileImage
+    image: enemyProjectileImage,
   };
   enemyProjectiles.push(projectile);
 }
@@ -178,7 +217,7 @@ function checkCollisions() {
         playerProjectiles.splice(pIndex, 1); // Remove o projétil do jogador
         score++; // Aumenta a pontuação
         scoreDisplay.textContent = `Pontos: ${score}`;
-        
+
         createEnemies(); // Adiciona dois novos inimigos
         createEnemies(); // Chamada adicional para criar mais dois
       }
@@ -214,6 +253,23 @@ function checkCollisions() {
       createEnemies(); // Chamada adicional para criar mais dois
     }
   });
+
+  // Checar colisões entre o projetil do jogador e o boss
+  playerProjectiles.forEach((proj, pIndex) => {
+    bosses.forEach((boss, eIndex) => {
+      if (
+        proj.x < boss.x + boss.width &&
+        proj.x + proj.width > boss.x &&
+        proj.y < boss.y + boss.height &&
+        proj.y + proj.height > boss.y
+      ) {
+        bosses.splice(eIndex, 1); // Remove o inimigo
+        playerProjectiles.splice(pIndex, 1); // Remove o projétil do jogador
+        score++; // Aumenta a pontuação
+        scoreDisplay.textContent = `Pontos: ${score}`;
+      }
+    });
+  });
 }
 
 // Função para atualizar a lógica do jogo
@@ -223,7 +279,7 @@ function updateGame() {
   updateEnemyProjectiles();
 
   // Faz com que os inimigos atirem
-  enemies.forEach(enemy => {
+  enemies.forEach((enemy) => {
     if (Date.now() - enemy.lastShotTime > enemy.shootInterval) {
       //shootEnemyProjectile(enemy);
       enemy.lastShotTime = Date.now(); // Atualiza o tempo do último tiro
@@ -245,9 +301,11 @@ function updatePlayerPosition() {
 
   // Limites da tela
   if (player.x < 0) player.x = 0;
-  if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+  if (player.x + player.width > canvas.width)
+    player.x = canvas.width - player.width;
   if (player.y < 0) player.y = 0;
-  if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
+  if (player.y + player.height > canvas.height)
+    player.y = canvas.height - player.height;
 }
 
 function updatePlayerProjectiles() {
@@ -270,10 +328,9 @@ function updateEnemyProjectiles() {
 // Função para desenhar a tela de Game Over
 function drawGameOver() {
   ctx.drawImage(gameOverImage, 0, 0, canvas.width, canvas.height);
-  restartButton.style.display = 'block'; // Mostra o botão de reinício
-  restartButton.style.top = '60px'; // Centraliza o botão de reinício (ajuste o valor conforme necessário)
+  restartButton.style.display = "block"; // Mostra o botão de reinício
+  restartButton.style.top = "60px"; // Centraliza o botão de reinício (ajuste o valor conforme necessário)
 }
-
 
 // Função para reiniciar o jogo
 function restartGame() {
@@ -282,49 +339,49 @@ function restartGame() {
   player.x = canvas.width / 2;
   player.y = canvas.height - 150;
   enemies = [];
+  bosses = [];
   playerProjectiles = [];
   enemyProjectiles = [];
   score = 0;
   level = 1;
   scoreDisplay.textContent = `Pontos: ${score}`;
-  livesDisplay.textContent = `Vidas: ${player.lives}`;  
+  livesDisplay.textContent = `Vidas: ${player.lives}`;
   levelDisplay.textContent = `Nível: ${level}`;
-  restartButton.style.display = 'none'; // Esconde o botão de reinício
+  restartButton.style.display = "none"; // Esconde o botão de reinício
   createEnemies(); // Cria os inimigos iniciais
   gameLoop(); // Reinicia o loop do jogo
 }
 
 // Função para iniciar o jogo
 function startGame() {
-  startButton.style.display = 'none'; // Esconde o botão de iniciar
-  restartButton.style.display = 'none'; // Esconde o botão de reinício se aparecer
+  startButton.style.display = "none"; // Esconde o botão de iniciar
+  restartButton.style.display = "none"; // Esconde o botão de reinício se aparecer
   restartGame(); // Inicia o jogo
 }
 
-
 // Função para subir o Nível ou fase do jogo
-function upLevelGame() {  
+function upLevelGame() {
   level++;
-  levelDisplay.textContent = `Nível: ${level}`; 
-  if(level==2){
-    background.src = './img/cenario2.png'; // Substitua pelo caminho da imagem do cenário
+  levelDisplay.textContent = `Nível: ${level}`;
+  if (level == 2) {
+    background.src = "./img/cenario2.png"; // Substitua pelo caminho da imagem do cenário
   }
-  if(level==3){
-    background.src = './img/cenario3.png'; // Substitua pelo caminho da imagem do cenário
+  if (level == 3) {
+    background.src = "./img/cenario3.png"; // Substitua pelo caminho da imagem do cenário
   }
-  if(level==4){
-    background.src = './img/cenario4.png'; // Substitua pelo caminho da imagem do cenário
+  if (level == 4) {
+    background.src = "./img/cenario4.png"; // Substitua pelo caminho da imagem do cenário
   }
-  if(level==5){
-    background.src = './img/cenario2.png'; // Substitua pelo caminho da imagem do cenário
+  if (level == 5) {
+    background.src = "./img/cenario2.png"; // Substitua pelo caminho da imagem do cenário
   }
 }
 
 // Event listeners
-document.addEventListener('keydown', handleKeyDown);
-document.addEventListener('keyup', handleKeyUp);
-restartButton.addEventListener('click', restartGame); // Reinicia o jogo quando o botão é clicado
-startButton.addEventListener('click', startGame); // Inicia o jogo quando o botão é clicado
+document.addEventListener("keydown", handleKeyDown);
+document.addEventListener("keyup", handleKeyUp);
+restartButton.addEventListener("click", restartGame); // Reinicia o jogo quando o botão é clicado
+startButton.addEventListener("click", startGame); // Inicia o jogo quando o botão é clicado
 
 // Função principal do jogo
 function gameLoop() {
@@ -332,38 +389,39 @@ function gameLoop() {
     drawGameOver();
     return;
   }
-  if(level == 1){    
-    if(score == 2){    
+  if (level == 1) {
+    if (score == 2) {
       upLevelGame();
     }
   }
-  if(level == 2){    
-    if(score == 3){
-      //mostrar chefão
+  if (level == 2) {
+    if (score == 3) {
+      if (!boss2) {
+        boss2 = false;
+        createBoss();
+      }
     }
-    if(score == 4){    
+    if (score == 4) {
       upLevelGame();
     }
-  }  
-  if(level == 3){    
-    if(score == 6){
-      //mostrar chefão
-    }
-    if(score == 7){    
-      upLevelGame();
-    }
-  }  
-  if(level == 4 && score==8){    
-    gameOver=true;
   }
-
+  if (level == 3) {
+    if (score == 6) {
+    }
+    if (score == 7) {
+      upLevelGame();
+    }
+  }
+  if (level == 4 && score == 8) {
+    gameOver = true;
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
   drawPlayer();
   drawEnemies();
   drawProjectiles();
-
+  drawBoss();
   updateGame();
   requestAnimationFrame(gameLoop);
 }
