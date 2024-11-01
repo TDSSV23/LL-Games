@@ -47,9 +47,19 @@ enemyProjectileImage.src = "./img/projetil_inimigo.png";
 let gameOver = false;
 let score = 0;
 let level = 1;
+let boss1 = false;
 let boss2 = false;
 let boss3 = false;
 let boss4 = false;
+const scoreLevel1 = 5;
+const scoreLevel2 = 10;
+const scoreLevel3 = 15;
+const scoreLevel4 = 20;
+const bossLife1 = 3;
+const bossLife2 = 3;
+const bossLife3 = 3;
+const bossLife4 = 3;
+
 const gameOverImage = new Image();
 gameOverImage.src = "./img/game_over.png";
 
@@ -181,12 +191,24 @@ function createBoss() {
     lives: 2, // Inicia com 2 vidas
   };
   switch (level) {
+    case 1:
+      boss.image.src = "./img/boss3.png";
+      break;
     case 2:
       boss.image.src = "./img/boss1.png";
       break;
+    case 3:
+      boss.image.src = "./img/boss2.png";
+      break;
+    case 4:
+      boss.image.src = "./img/boss3.png";
+      break;
   }
-
-  bosses.push(boss);
+  if (bosses.length == 0) {
+    
+    bosses.push(boss);
+    enemies = [];
+  }
 }
 
 // Função para atirar projéteis dos inimigos
@@ -375,6 +397,7 @@ function upLevelGame() {
   if (level == 5) {
     background.src = "./img/cenario2.png"; // Substitua pelo caminho da imagem do cenário
   }
+  createEnemies();
 }
 
 // Event listeners
@@ -390,30 +413,48 @@ function gameLoop() {
     return;
   }
   if (level == 1) {
-    if (score == 2) {
+    if (score == scoreLevel1 - bossLife1) {
+      if (!boss1) {
+        boss1 = false;
+        createBoss();
+      }
+    }
+    if (score == scoreLevel1) {
       upLevelGame();
     }
   }
   if (level == 2) {
-    if (score == 3) {
+    if (score == scoreLevel2 - bossLife2) {
       if (!boss2) {
         boss2 = false;
         createBoss();
       }
     }
-    if (score == 4) {
+    if (score == scoreLevel2) {
       upLevelGame();
     }
   }
   if (level == 3) {
-    if (score == 6) {
+    if (score == scoreLevel3 - bossLife3) {
+      if (!boss3) {
+        boss3 = false;
+        createBoss();
+      }
     }
-    if (score == 7) {
+    if (score == scoreLevel3) {
       upLevelGame();
     }
   }
-  if (level == 4 && score == 8) {
-    gameOver = true;
+  if (level == 4) {
+    if (score == scoreLevel4 - bossLife4) {
+      if (!boss4) {
+        boss4 = false;
+        createBoss();
+      }
+    }
+    if (score == scoreLevel4) {
+      gameOver = true;
+    }
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
