@@ -36,12 +36,15 @@ let enemies = [];
 let bosses = [];
 let playerProjectiles = [];
 let enemyProjectiles = [];
+let bossProjectiles = [];
 const enemyImage = new Image();
 enemyImage.src = "./img/inimigo.png";
 const playerProjectileImage = new Image();
 playerProjectileImage.src = "./img/projetil_jogador.png";
 const enemyProjectileImage = new Image();
 enemyProjectileImage.src = "./img/projetil_inimigo.png";
+const bossProjectileImage = new Image();
+bossProjectileImage.src = "./img/projetil_inimigo.png";
 
 // Estado do jogo
 let gameOver = false;
@@ -51,10 +54,10 @@ let boss1 = false;
 let boss2 = false;
 let boss3 = false;
 let boss4 = false;
-const scoreLevel1 = 5;
-const scoreLevel2 = 10;
-const scoreLevel3 = 15;
-const scoreLevel4 = 20;
+const scoreLevel1 = 10;
+const scoreLevel2 = 20;
+const scoreLevel3 = 30;
+const scoreLevel4 = 40;
 const bossLife1 = 3;
 const bossLife2 = 3;
 const bossLife3 = 3;
@@ -103,6 +106,9 @@ function drawProjectiles() {
     );
   });
   enemyProjectiles.forEach((proj) => {
+    ctx.drawImage(proj.image, proj.x, proj.y, proj.width, proj.height);
+  });
+  bossProjectiles.forEach((proj) => {
     ctx.drawImage(proj.image, proj.x, proj.y, proj.width, proj.height);
   });
 }
@@ -177,7 +183,20 @@ function createEnemies() {
   }
 }
 
-function createBoss() {
+// Função para atirar projéteis dos inimigos
+function shootEnemyProjectile(enemy) {
+  const projectile = {
+    x: enemy.x + enemy.width / 2 - 25,
+    y: enemy.y + enemy.height,
+    width: 50,
+    height: 10,
+    speed: 2,
+    image: enemyProjectileImage,
+  };
+  enemyProjectiles.push(projectile);
+}
+
+function createBosses() {
   // Propriedades do chefão
   const boss = {
     x: canvas.width / 1.7,
@@ -188,40 +207,46 @@ function createBoss() {
     dx: 0,
     dy: 0,
     image: new Image(),
-    lives: 2, // Inicia com 2 vidas
+    lives: 0,
+    speed: 2,
+    shootInterval: Math.random() * 1000 + 500, // Intervalo aleatório para atirar
+    lastShotTime: Date.now(), // Adiciona a última vez que o inimigo atirou
   };
   switch (level) {
     case 1:
-      boss.image.src = "./img/boss3.png";
+      boss.image.src = "./img/boss1.png";
+      boss.lives = bossLife1;
       break;
     case 2:
-      boss.image.src = "./img/boss1.png";
+      boss.image.src = "./img/boss2.png";
+      boss.lives = bossLife2;
       break;
     case 3:
-      boss.image.src = "./img/boss2.png";
+      boss.image.src = "./img/boss3.png";
+      boss.lives = bossLife3;
       break;
     case 4:
-      boss.image.src = "./img/boss3.png";
+      boss.image.src = "./img/boss4.png";
+      boss.lives = bossLife4;
       break;
   }
   if (bosses.length == 0) {
-    
     bosses.push(boss);
     enemies = [];
   }
 }
 
-// Função para atirar projéteis dos inimigos
-function shootEnemyProjectile(enemy) {
+// Função para atirar projéteis dos chefões
+function shootBossProjectile(boss) {
   const projectile = {
-    x: enemy.x + enemy.width / 2 - 5,
-    y: enemy.y + enemy.height,
-    width: 10,
+    x: boss.x + boss.width / 2 - 25,
+    y: boss.y + boss.height,
+    width: 50,
     height: 10,
-    speed: 3,
-    image: enemyProjectileImage,
+    speed: 5,
+    image: bossProjectileImage
   };
-  enemyProjectiles.push(projectile);
+  bossProjectiles.push(projectile);
 }
 
 // Função para checar colisões
@@ -260,6 +285,20 @@ function checkCollisions() {
     }
   });
 
+  // Checar colisões de projéteis dos inimigos com o jogador
+  bossProjectiles.forEach((proj, index) => {
+    if (
+      proj.x < player.x + player.width &&
+      proj.x + proj.width > player.x &&
+      proj.y + proj.height > player.y &&
+      proj.y < player.y + player.height
+    ) {
+      player.lives--; // Perde 1 vida
+      livesDisplay.textContent = `Vidas: ${player.lives}`;
+      bossProjectiles.splice(index, 1); // Remove o projétil do inimigo
+    }
+  });
+
   // Checar colisões entre o jogador e inimigos
   enemies.forEach((enemy, index) => {
     if (
@@ -285,7 +324,8 @@ function checkCollisions() {
         proj.y < boss.y + boss.height &&
         proj.y + proj.height > boss.y
       ) {
-        bosses.splice(eIndex, 1); // Remove o inimigo
+        boss.lives--;
+        if (boss.lives <= 0) bosses.splice(eIndex, 1); // Remove o inimigo
         playerProjectiles.splice(pIndex, 1); // Remove o projétil do jogador
         score++; // Aumenta a pontuação
         scoreDisplay.textContent = `Pontos: ${score}`;
@@ -299,12 +339,20 @@ function updateGame() {
   updatePlayerPosition();
   updatePlayerProjectiles();
   updateEnemyProjectiles();
+  updateBossProjectiles();
 
   // Faz com que os inimigos atirem
   enemies.forEach((enemy) => {
     if (Date.now() - enemy.lastShotTime > enemy.shootInterval) {
-      //shootEnemyProjectile(enemy);
+      shootEnemyProjectile(enemy);
       enemy.lastShotTime = Date.now(); // Atualiza o tempo do último tiro
+    }
+  });
+  // Faz com que os inimigos atirem
+  bosses.forEach((boss) => {
+    if (Date.now() - boss.lastShotTime > boss.shootInterval) {
+      shootBossProjectile(boss);
+      boss.lastShotTime = Date.now(); // Atualiza o tempo do último tiro
     }
   });
 
@@ -347,6 +395,15 @@ function updateEnemyProjectiles() {
     }
   });
 }
+
+function updateBossProjectiles() {
+  bossProjectiles.forEach((proj, index) => {
+    proj.y += proj.speed; // Move o projétil do boss
+    if (proj.y > canvas.height) {
+      bossProjectiles.splice(index, 1); // Remove projéteis fora da tela
+    }
+  });
+}
 // Função para desenhar a tela de Game Over
 function drawGameOver() {
   ctx.drawImage(gameOverImage, 0, 0, canvas.width, canvas.height);
@@ -364,6 +421,7 @@ function restartGame() {
   bosses = [];
   playerProjectiles = [];
   enemyProjectiles = [];
+  bossProjectiles = [];
   score = 0;
   level = 1;
   scoreDisplay.textContent = `Pontos: ${score}`;
@@ -416,7 +474,7 @@ function gameLoop() {
     if (score == scoreLevel1 - bossLife1) {
       if (!boss1) {
         boss1 = false;
-        createBoss();
+        createBosses();
       }
     }
     if (score == scoreLevel1) {
@@ -427,7 +485,7 @@ function gameLoop() {
     if (score == scoreLevel2 - bossLife2) {
       if (!boss2) {
         boss2 = false;
-        createBoss();
+        createBosses();
       }
     }
     if (score == scoreLevel2) {
@@ -438,7 +496,7 @@ function gameLoop() {
     if (score == scoreLevel3 - bossLife3) {
       if (!boss3) {
         boss3 = false;
-        createBoss();
+        createBosses();
       }
     }
     if (score == scoreLevel3) {
@@ -449,7 +507,7 @@ function gameLoop() {
     if (score == scoreLevel4 - bossLife4) {
       if (!boss4) {
         boss4 = false;
-        createBoss();
+        createBosses();
       }
     }
     if (score == scoreLevel4) {
