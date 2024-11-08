@@ -190,7 +190,7 @@ function shootEnemyProjectile(enemy) {
     y: enemy.y + enemy.height,
     width: 50,
     height: 10,
-    speed: 2,
+    speed: 8,
     image: enemyProjectileImage,
   };
   enemyProjectiles.push(projectile);
