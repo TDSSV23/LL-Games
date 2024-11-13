@@ -31,6 +31,21 @@ player.image.src = "./img/jogador.png"; // Substitua pelo caminho da imagem do j
 const background = new Image();
 background.src = "./img/cenario1.png"; // Substitua pelo caminho da imagem do cenário
 
+// Carrega a imagem da vida extra
+const extraLifeImage = new Image();
+extraLifeImage.src = "./img/poweupvida.png"; // Substitua pelo caminho da imagem de vida extra
+
+// Propriedades da vida extra
+let extraLife = {
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height / 2,
+  width: 30,
+  height: 30,
+  speedX: (Math.random() * 2 - 1) * 2, // Velocidade aleatória em X
+  speedY: (Math.random() * 2 - 1) * 2, // Velocidade aleatória em Y
+  active: false, // Define se a vida extra está ativa na tela
+};
+
 // Propriedades dos inimigos e projéteis
 let enemies = [];
 let bosses = [];
@@ -111,6 +126,55 @@ function drawProjectiles() {
   bossProjectiles.forEach((proj) => {
     ctx.drawImage(proj.image, proj.x, proj.y, proj.width, proj.height);
   });
+}
+
+// Função para fazer a vida extra aparecer em intervalos aleatórios
+function spawnExtraLife() {
+  if (!extraLife.active && Math.random() < 0.01) { // Probabilidade de 1% para aparecer em cada frame
+    extraLife.x = Math.random() * (canvas.width - extraLife.width);
+    extraLife.y = Math.random() * (canvas.height / 2);
+    extraLife.speedX = (Math.random() * 2 - 1) * 2;
+    extraLife.speedY = (Math.random() * 2 - 1) * 2;
+    extraLife.active = true;
+  }
+}
+
+// Função para atualizar a posição da vida extra
+function updateExtraLife() {
+  if (extraLife.active) {
+    extraLife.x += extraLife.speedX;
+    extraLife.y += extraLife.speedY;
+
+    // Colisão com as bordas do canvas
+    if (extraLife.x <= 0 || extraLife.x + extraLife.width >= canvas.width) {
+      extraLife.speedX *= -1; // Inverte a direção no eixo X
+    }
+    if (extraLife.y <= 0 || extraLife.y + extraLife.height >= canvas.height) {
+      extraLife.speedY *= -1; // Inverte a direção no eixo Y
+    }
+  }
+}
+
+// Função para desenhar a vida extra
+function drawExtraLife() {
+  if (extraLife.active) {
+    ctx.drawImage(extraLifeImage, extraLife.x, extraLife.y, extraLife.width, extraLife.height);
+  }
+}
+
+// Função para verificar colisão entre o jogador e a vida extra
+function checkExtraLifeCollision() {
+  if (
+    extraLife.active &&
+    player.x < extraLife.x + extraLife.width &&
+    player.x + player.width > extraLife.x &&
+    player.y < extraLife.y + extraLife.height &&
+    player.y + player.height > extraLife.y
+  ) {
+    player.lives++; // Aumenta a vida do jogador
+    livesDisplay.textContent = `Vidas: ${player.lives}`; // Atualiza o display de vidas
+    extraLife.active = false; // Remove a vida extra da tela
+  }
 }
 
 // Função para capturar as teclas de movimento
@@ -522,7 +586,15 @@ function gameLoop() {
   drawEnemies();
   drawProjectiles();
   drawBoss();
+
+  drawExtraLife(); // Desenha a vida extra
+
   updateGame();
+
+  spawnExtraLife(); // Tenta gerar a vida extra
+  updateExtraLife(); // Atualiza a posição da vida extra
+  checkExtraLifeCollision(); // Verifica colisão entre o jogador e a vida extra
+
   requestAnimationFrame(gameLoop);
 }
 
