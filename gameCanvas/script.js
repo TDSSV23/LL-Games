@@ -176,7 +176,7 @@ function createEnemies() {
       width: 50,
       height: 50,
       speed: 2,
-      shootInterval: Math.random() * 1000 + 500, // Intervalo aleatório para atirar
+      shootInterval: Math.random() * 2000 + 1000, // Intervalo aleatório para atirar
       lastShotTime: Date.now(), // Adiciona a última vez que o inimigo atirou
     };
     enemies.push(enemy);
@@ -424,6 +424,7 @@ function restartGame() {
   bossProjectiles = [];
   score = 0;
   level = 1;
+  background.src = "./img/cenario1.png"; // Define o cenário inicial novamente
   scoreDisplay.textContent = `Pontos: ${score}`;
   livesDisplay.textContent = `Vidas: ${player.lives}`;
   levelDisplay.textContent = `Nível: ${level}`;
