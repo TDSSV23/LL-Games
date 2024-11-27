@@ -60,6 +60,9 @@ const enemyProjectileImage = new Image();
 enemyProjectileImage.src = "./img/projetil_inimigo.png";
 const bossProjectileImage = new Image();
 bossProjectileImage.src = "./img/projetil_inimigo.png";
+const levelEndImage = new Image();
+levelEndImage.src = "./img/fimdejogo"; // Substitua pelo caminho da imagem que você quer carregar
+
 
 // Estado do jogo
 let gameOver = false;
@@ -522,6 +525,13 @@ function upLevelGame() {
   }
   createEnemies();
 }
+// Função para exibir a imagem de fim de fase e o botão de reinício
+function displayLevelEndScreen() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(levelEndImage, 0, 0, canvas.width, canvas.height);
+  restartButton.style.display = "block"; // Exibe o botão de reinício
+  restartButton.style.top = "60px"; // Ajusta a posição do botão se necessário
+}
 
 // Event listeners
 document.addEventListener("keydown", handleKeyDown);
@@ -575,11 +585,20 @@ function gameLoop() {
         createBosses();
       }
     }
-    if (score == scoreLevel4) {
-      gameOver = true;
+    if (gameOver) {
+      if (level > 4) {
+        displayLevelEndScreen(); // Exibe a tela de fim de fase se o nível for maior que 4
+      } else {
+        drawGameOver(); // Caso contrário, exibe o game over tradicional
+      }
+      return;
     }
   }
-
+    if (score == scoreLevel4) {
+      gameOver = true;
+      
+    }
+  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
   drawPlayer();
@@ -596,8 +615,8 @@ function gameLoop() {
   checkExtraLifeCollision(); // Verifica colisão entre o jogador e a vida extra
 
   requestAnimationFrame(gameLoop);
-}
 
+  }
 // Inicializa o jogo
 createEnemies(); // Cria inimigos
 gameLoop(); // Inicia o loop do jogo
